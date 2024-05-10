@@ -55,6 +55,7 @@ class NeuralNetwork:
         self.layers.append(layer)
         self.model_weights.append(layer.W)
         self.model_biases.append(layer.b)
+
     def predict_prob(self, input_data):
         return [reduce(lambda output, layer: layer.forward(output), self.layers, data) for data in input_data]
 
@@ -138,7 +139,7 @@ def new_child(p1, p2, p3, target, cr, f):
 
         for j in range(len(trial.model_weights[i])):
             trial.model_weights[i][j] = mutant.model_weights[i][j] if random.random() <= cr else \
-            target.model_weights[i][j]
+                target.model_weights[i][j]
         for j in range(len(trial.model_biases[i])):
             trial.model_biases[i][j] = mutant.model_biases[i][j] if random.random() <= cr else target.model_biases[i][j]
     return trial
@@ -157,11 +158,13 @@ def evaluate_target(target, population, f, cr, sigma_share, alpha):
 
 
 from PyQt5.QtWidgets import (
-    QMainWindow, QApplication, QHBoxLayout, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy, QTextEdit, QScrollArea
+    QMainWindow, QApplication, QHBoxLayout, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSizePolicy,
+    QTextEdit, QScrollArea
 )
 from PyQt5.QtCore import Qt
 import matplotlib.pyplot as plt
 import matplotlib
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import sys
@@ -193,12 +196,14 @@ class EAWithGUI(QMainWindow):
         inputs_layout = QVBoxLayout(left_box)
         inputs_layout.setContentsMargins(20, 20, 20, 20)
         inputs_layout.setAlignment(Qt.AlignTop)
-        inputs = ['Population Size', 'f Parameter', 'cr Parameter', 'Number of Generations', 'Sigma Share', 'alpha Parameter', 'Max Stall Iters', 'Percentage To Keep']
+        inputs = ['Population Size', 'f Parameter', 'cr Parameter', 'Number of Generations', 'Sigma Share',
+                  'alpha Parameter', 'Max Stall Iters', 'Percentage To Keep']
         for i in range(len(inputs)):
             label = QLabel(f'{inputs[i]}:')
             label.setStyleSheet('color: #524C42; font-size: 14px; font-weight: bold;')
             input_field = QLineEdit()
-            input_field.setStyleSheet('color: #E2DFD0; background-color: #524C42; border: 4px solid #32012F; padding: 5px;')
+            input_field.setStyleSheet(
+                'color: #E2DFD0; background-color: #524C42; border: 4px solid #32012F; padding: 5px;')
             input_layout = QHBoxLayout()
             input_layout.setContentsMargins(0, 0, 0, 20)
             input_layout.addWidget(label)
@@ -242,7 +247,8 @@ class EAWithGUI(QMainWindow):
         scroll_area.setWidget(self.output_text)
 
         self.accuracy_label = QLabel('Best Accuracy: ')
-        self.accuracy_label.setStyleSheet('color: #E2DFD0; font-size: 16px; font-weight: bold; background-color: #524C42; padding: 10px;')
+        self.accuracy_label.setStyleSheet(
+            'color: #E2DFD0; font-size: 16px; font-weight: bold; background-color: #524C42; padding: 10px;')
         results_layout.addWidget(self.accuracy_label, 1)
 
         visual_output_layout = QWidget(self)
@@ -267,10 +273,12 @@ class EAWithGUI(QMainWindow):
         max_stall_iters_input = int(self.input_fields[6].text())
         percentage_to_keep = float(self.input_fields[7].text())
 
-        def differential_evolution(population_size, f=1.5, cr=0.9, max_iters=10, sigma_share=130.0, alpha=1.0, max_stall_iters=10, percentage_to_keep=0.3):
+        def differential_evolution(population_size, f=1.5, cr=0.9, max_iters=300, sigma_share=130.0, alpha=1.0,
+                                   max_stall_iters=10, percentage_to_keep=0.3):
             population, fitnesses = generate_population(population_size)
             best = population[np.argmax(fitnesses)]
             best_acc = max(fitnesses)
+            print(best_acc)
             num_iters = 0
             stall_iters = 0
             restart_output = None
@@ -292,7 +300,7 @@ class EAWithGUI(QMainWindow):
 
                 if new_best_acc > best_acc:
                     best_acc = new_best_acc
-                    best = new_population[best_index]
+                    best = new_population[best_index] 
                     stall_iters = 0
                 else:
                     stall_iters += 1
@@ -301,10 +309,11 @@ class EAWithGUI(QMainWindow):
                 num_iters += 1
                 avr = np.mean(new_fitnesses)
                 print(f"Iteration: {num_iters} -> Best Accuracy: {best_acc:.2f} % -> Average:{avr:.2f} ")
+                output = f'Iteration: {num_iters} -> Best Accuracy: {best_acc:.2f} % -> Average: {avr:.2f}'
 
                 # Restart if best accuracy has not improved for max_stall_iters iterations
                 if stall_iters == max_stall_iters:
-                    restart_output = f"Restarting population due to stalling for {max_stall_iters} iterations..."
+                    restart_output = "Restarting population due to stalling for {max_stall_iters} iterations..."
                     sorted_indices = np.argsort(-new_fitnesses)
                     keep = int(percentage_to_keep * population_size)
                     new_indx = sorted_indices[:keep]
@@ -318,7 +327,6 @@ class EAWithGUI(QMainWindow):
                     stall_iters = 0
 
                 self.generations_records.append((num_iters, best_acc))
-                output = f'Iteration: {num_iters} -> Best Accuracy: {best_acc:.2f} % -> Average: {avr:.2f}'
                 if restart_output:
                     self.output_text.append(restart_output)
                     self.output_text.verticalScrollBar().setValue(self.output_text.verticalScrollBar().maximum())
@@ -330,7 +338,10 @@ class EAWithGUI(QMainWindow):
             return population, best, best_acc
 
         start_time = time.time()
-        population, best_solution, best_acc = differential_evolution(population_size_input, f_parameter_input, cr_parameter_input, num_generations_input, sigma_share_input, alpha_parameter_input, max_stall_iters_input, percentage_to_keep)
+        population, best_solution, best_acc = differential_evolution(population_size_input, f_parameter_input,
+                                                                     cr_parameter_input, num_generations_input,
+                                                                     sigma_share_input, alpha_parameter_input,
+                                                                     max_stall_iters_input, percentage_to_keep)
         self.accuracy_label.setText(self.accuracy_label.text() + str(best_acc))
         self.accuracy_label.adjustSize()
         self.accuracy_label.repaint()
@@ -338,7 +349,8 @@ class EAWithGUI(QMainWindow):
         print((end_time - start_time) / 60)
 
         generations, accuracies = zip(*self.generations_records)
-        self.ax.plot(generations, accuracies, marker='o', linestyle='-', label='Best Accuracy')  # Plot best accuracy for each generation
+        self.ax.plot(generations, accuracies, marker='o', linestyle='-',
+                     label='Best Accuracy')
         self.ax.set_xlabel('Generation')
         self.ax.set_ylabel('Accuracy (%)')
         self.ax.set_title('Evolution of Accuracy')
